@@ -16,7 +16,8 @@ namespace Jither.CommandLine
         RequiredAfterNotRequired,
         RequiredWithDefault,
         InvalidExample,
-        ListOfBooleans
+        ListOfBooleans,
+        PositionalWithoutName
     }
 
     public class Issue
@@ -44,7 +45,7 @@ namespace Jither.CommandLine
 
     public class IssueCollection : IEnumerable<Issue>
     {
-        private List<Issue> issues = new List<Issue>();
+        private readonly List<Issue> issues = new List<Issue>();
 
         public void Add(Verb verb, IssueType type, string message)
         {
@@ -100,11 +101,11 @@ namespace Jither.CommandLine
             CheckSwitches(issues, verb);
             CheckExamples(issues, verb);
             CheckLists(issues, verb);
+            CheckPositionalWithoutArgName(issues, verb);
         }
 
         private void CheckExamples(IssueCollection issues, Verb verb)
         {
-            var defs = verb.GetArgumentDefinitions();
             var examples = verb.GetExamples();
             var formatter = new ArgumentsFormatter(verb);
             foreach (var example in examples)
@@ -222,5 +223,14 @@ namespace Jither.CommandLine
             }
         }
 
+        private void CheckPositionalWithoutArgName(IssueCollection issues, Verb verb)
+        {
+            var defs = verb.GetArgumentDefinitions();
+
+            foreach (var option in defs.Positionals.Where(o => o.Name == null))
+            {
+                issues.Add(verb, IssueType.PositionalWithoutName, $"Positional at {option.Position} has no name. It should, in order to generate useful help.");
+            }
+        }
     }
 }

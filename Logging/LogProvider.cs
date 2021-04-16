@@ -5,8 +5,8 @@ namespace Jither.Logging
 {
     public static class LogProvider
     {
-        private static List<ILog> logs = new List<ILog>();
-        private static Dictionary<string, Logger> loggersByName = new Dictionary<string, Logger>();
+        private static readonly List<ILog> logs = new List<ILog>();
+        private static readonly Dictionary<string, Logger> loggersByName = new Dictionary<string, Logger>();
 
         public static LogLevel Level { get; set; } = LogLevel.Info;
 

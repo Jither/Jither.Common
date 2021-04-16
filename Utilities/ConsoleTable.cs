@@ -11,6 +11,7 @@ namespace Jither.Utilities
         None = 0,
         RightAligned = 1,
         AutoSize = 2,
+        Wrap = 4,
     }
 
     internal class ConsoleTableColumn
@@ -39,28 +40,26 @@ namespace Jither.Utilities
         public ConsoleTableRow(IReadOnlyList<object> cells)
         {
             Cells = cells;
-            CellValues = cells.Select(c => c.ToString()).ToList();
+            CellValues = cells.Select(c => c?.ToString() ?? String.Empty).ToList();
         }
     }
 
     internal class WrappingRemainder
     {
         public ConsoleTableColumn Column { get; }
-        public IEnumerable<string> Lines { get; }
-        public int LeftMargin { get; }
+        public List<string> Lines { get; }
 
-        public WrappingRemainder(ConsoleTableColumn column, IEnumerable<string> lines, int leftMargin)
+        public WrappingRemainder(ConsoleTableColumn column, List<string> lines)
         {
             Column = column;
             Lines = lines;
-            LeftMargin = leftMargin;
         }
     }
 
     public class ConsoleTable
     {
-        private List<ConsoleTableColumn> columns = new List<ConsoleTableColumn>();
-        private List<ConsoleTableRow> rows = new List<ConsoleTableRow>();
+        private readonly List<ConsoleTableColumn> columns = new List<ConsoleTableColumn>();
+        private readonly List<ConsoleTableRow> rows = new List<ConsoleTableRow>();
         private readonly int columnSpacing;
 
         public ConsoleTable(int columnSpacing = 2)
@@ -98,22 +97,21 @@ namespace Jither.Utilities
 
             string columnSpace = new String(' ', columnSpacing);
 
-            WrappingRemainder wrappingRemainder = null;
+            List<WrappingRemainder> wrappingRemainders = new List<WrappingRemainder>();
 
             foreach (var row in rows)
             {
                 int cellIndex = 0;
-                int rowLength = 0;
                 foreach (var column in columns)
                 {
                     string text = row.CellValues[cellIndex];
 
-                    if (column.Format.HasFlag(ConsoleColumnFormat.AutoSize) && text.Length > column.CalculatedWidth)
+                    if (text.Length > column.CalculatedWidth && (column.Format.HasFlag(ConsoleColumnFormat.AutoSize) || column.Format.HasFlag(ConsoleColumnFormat.Wrap)))
                     {
                         var lines = text.Wrap(column.CalculatedWidth);
                         text = MakeCellLine(column, lines[0]);
                         builder.Append(text);
-                        wrappingRemainder = new WrappingRemainder(column, lines.Skip(1), rowLength);
+                        wrappingRemainders.Add(new WrappingRemainder(column, lines.Skip(1).ToList()));
                     }
                     else
                     {
@@ -121,26 +119,41 @@ namespace Jither.Utilities
                         builder.Append(text);
                     }
 
-                    rowLength += column.CalculatedWidth;
-
                     // Add space between columns
                     if (cellIndex < columns.Count - 1)
                     {
                         builder.Append(columnSpace);
-                        rowLength += columnSpacing;
                     }
                     cellIndex++;
                 }
                 builder.AppendLine();
 
-                if (wrappingRemainder != null)
+                // Add wrapped lines
+                while (wrappingRemainders.Count > 0)
                 {
-                    foreach (var line in wrappingRemainder.Lines)
+                    cellIndex = 0;
+                    foreach (var column in columns)
                     {
-                        var text = MakeCellLine(wrappingRemainder.Column, line);
-                        builder.AppendLine(new String(' ', wrappingRemainder.LeftMargin) + text);
+                        var remainder = wrappingRemainders.Find(w => w.Column == column);
+                        string line = String.Empty;
+                        if (remainder != null)
+                        {
+                            line = remainder.Lines[0];
+                            remainder.Lines.RemoveAt(0);
+                            if (remainder.Lines.Count == 0)
+                            {
+                                wrappingRemainders.Remove(remainder);
+                            }
+                        }
+                        line = MakeCellLine(column, line);
+                        builder.Append(line);
+                        if (cellIndex < columns.Count - 1)
+                        {
+                            builder.Append(columnSpace);
+                        }
+                        cellIndex++;
                     }
-                    wrappingRemainder = null;
+                    builder.AppendLine();
                 }
             }
             return builder.ToString();
@@ -173,7 +186,7 @@ namespace Jither.Utilities
                 foreach (var column in columns)
                 {
                     string text = row.CellValues[cellIndex];
-                    column.CalculatedWidth = Math.Max(text.Length, column.CalculatedWidth);
+                    column.CalculatedWidth = column.Format.HasFlag(ConsoleColumnFormat.Wrap) ? column.CalculatedWidth : Math.Max(text.Length, column.CalculatedWidth);
                     cellIndex++;
                 }
             }

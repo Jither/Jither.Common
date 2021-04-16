@@ -11,13 +11,13 @@ namespace Jither.Logging
         private readonly string format;
 
         private static bool IsColorEnabled => !Console.IsOutputRedirected && Environment.GetEnvironmentVariable("NO_COLOR") == null;
-        private static Dictionary<string, int> VARIABLES = new Dictionary<string, int>
+        private static readonly Dictionary<string, int> VARIABLES = new Dictionary<string, int>
         {
             ["name"] = 0,
             ["message"] = 1,
             ["time"] = 2,
         };
-        private static Regex RX_FORMAT_VARIABLE = new Regex(@"\{(?<name>[a-zA-Z0-9]+)(?<mods>[^}]*)\}");
+        private static readonly Regex RX_FORMAT_VARIABLE = new Regex(@"\{(?<name>[a-zA-Z0-9]+)(?<mods>[^}]*)\}");
 
         public ConsoleLog(string format = null)
         {
@@ -39,7 +39,7 @@ namespace Jither.Logging
             });
         }
 
-        private static Regex rxStyle = new Regex(@"<(?<end>/)?(?<style>[a-z]+)(?:#(?<color>[0-9a-f]{6,}))?>");
+        private static readonly Regex rxStyle = new Regex(@"<(?<end>/)?(?<style>[a-z]+)(?:#(?<color>[0-9a-f]{6,}))?>");
 
         private string HexToAnsiRgb(string hex)
         {
@@ -92,6 +92,7 @@ namespace Jither.Logging
                             return isEnd ? "\x1b[22m" : "\x1b[2m";
                         case "u":
                             return isEnd ? "\x1b[24m" : "\x1b[4m";
+						case "c":
                         case "col":
                         case "color":
                             if (isEnd)
