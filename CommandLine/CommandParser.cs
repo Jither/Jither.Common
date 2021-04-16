@@ -22,6 +22,12 @@ namespace Jither.CommandLine
             this.helpSettings = helpSettings ?? HelpSettings.Default;
         }
 
+        public CommandParser(Action<HelpSettings> helpSettings)
+        {
+            this.helpSettings = new HelpSettings();
+            helpSettings(this.helpSettings);
+        }
+
         public Verb GetVerbByName(string name)
         {
             return verbs.SingleOrDefault(v => v.Name == name);
@@ -195,7 +201,8 @@ namespace Jither.CommandLine
 
         private void OnExecutingHandler(object sender, EventArgs e)
         {
-            if (helpSettings.WriteHeaderOnExecute)
+            // Don't output header for HelpOptions - Help outputs the header itself
+            if (helpSettings.WriteHeaderOnExecute && !(sender is Verb<HelpOptions>))
             {
                 var generator = new HelpGenerator(this, null, helpSettings);
                 generator.WriteHeader();

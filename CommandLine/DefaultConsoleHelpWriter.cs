@@ -11,6 +11,9 @@ namespace Jither.CommandLine
             ConsoleColor defaultColor = Console.ForegroundColor;
             switch (section)
             {
+                case HelpSection.Header:
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
                 case HelpSection.Error:
                     Console.ForegroundColor = ConsoleColor.Red;
                     break;
