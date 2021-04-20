@@ -89,6 +89,11 @@ namespace Jither.CommandLine
         public Func<TOptions, int> Handler { get; }
         public Func<TOptions, Task<int>> HandlerAsync { get; }
 
+        // No handler makes sense for testing
+        internal Verb(string name, string help) : base(name, help)
+        {
+        }
+
         internal Verb(string name, string help, Func<TOptions, int> handler) : base(name, help)
         {
             Handler = handler;
@@ -166,7 +171,7 @@ namespace Jither.CommandLine
                 {
                     var positional = new PositionalDefinition(attrPositional.Position, propType, propertyPath)
                     {
-                        Name = attrPositional.Name,
+                        Name = attrPositional.Name ?? GetNameFromProperty(prop),
                         Help = attrPositional.Help,
                         Required = attrPositional.Required
                     };

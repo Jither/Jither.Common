@@ -17,7 +17,7 @@ namespace Jither.CommandLine
         RequiredWithDefault,
         InvalidExample,
         ListOfBooleans,
-        PositionalWithoutName
+        NonSwitchOptionWithoutArgName
     }
 
     public class Issue
@@ -101,7 +101,7 @@ namespace Jither.CommandLine
             CheckSwitches(issues, verb);
             CheckExamples(issues, verb);
             CheckLists(issues, verb);
-            CheckPositionalWithoutArgName(issues, verb);
+            CheckNonSwitchOptionsWithoutArgName(issues, verb);
         }
 
         private void CheckExamples(IssueCollection issues, Verb verb)
@@ -223,13 +223,13 @@ namespace Jither.CommandLine
             }
         }
 
-        private void CheckPositionalWithoutArgName(IssueCollection issues, Verb verb)
+        private void CheckNonSwitchOptionsWithoutArgName(IssueCollection issues, Verb verb)
         {
             var defs = verb.GetArgumentDefinitions();
 
-            foreach (var option in defs.Positionals.Where(o => o.Name == null))
+            foreach (var option in defs.Options.Where(o => o.ArgName == null && !o.IsSwitch))
             {
-                issues.Add(verb, IssueType.PositionalWithoutName, $"Positional at {option.Position} has no name. It should, in order to generate useful help.");
+                issues.Add(verb, IssueType.NonSwitchOptionWithoutArgName, $"Non-switch option {option.DisplayName} has no argument name. It should, in order to generate useful help.");
             }
         }
     }

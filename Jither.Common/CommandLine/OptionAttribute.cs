@@ -12,12 +12,12 @@ namespace Jither.CommandLine
         public bool Required { get; set; }
         public object Default { get; set; }
 
-        public OptionAttribute(string name)
+        public OptionAttribute(string name = null)
         {
             Name = name;
         }
 
-        public OptionAttribute(char shortName, string name)
+        public OptionAttribute(char shortName, string name = null)
         {
             ShortName = shortName;
             Name = name;

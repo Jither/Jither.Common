@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Jither.Logging
 {
@@ -28,15 +24,15 @@ namespace Jither.Logging
         private readonly int positionX;
         private readonly int positionY;
         private readonly bool disabled;
-        private List<ProgressSlot> slots = new List<ProgressSlot>();
+        private readonly List<ProgressSlot> slots = new List<ProgressSlot>();
         private IList<object> values;
         private bool disposed;
 
         private static readonly int UPDATE_INTERVAL = 20;
 
-        private static Regex RX_SLOT = new Regex(@"\{(?<index>\d+)\}");
+        private static readonly Regex RX_SLOT = new Regex(@"\{(?<index>\d+)\}");
 
-        private Stopwatch stopwatch;
+        private readonly Stopwatch stopwatch;
 
         public ConsoleProgress(string template, params int[] slotLengths)
         {
