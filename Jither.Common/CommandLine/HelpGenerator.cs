@@ -30,7 +30,7 @@ namespace Jither.CommandLine
 
     public class HelpGenerator
     {
-        private static readonly Regex RX_TEMPLATE = new Regex(@"\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}");
+        private static readonly Regex RX_TEMPLATE = new(@"\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}");
         private readonly Dictionary<string, Func<string>> globalProperties;
         private readonly CommandParser parser;
         private readonly string errorMessage;
@@ -73,7 +73,7 @@ namespace Jither.CommandLine
                 // Name may include whitespace at beginning or end. This allows us to include this whitespace only if the property exists
                 string fullName = match.Groups["name"].Value.ToLower();
                 string name = fullName.Trim();
-                Int32.TryParse(match.Groups["pad"].Value, out int pad);
+                _ = Int32.TryParse(match.Groups["pad"].Value, out int pad);
                 string value = "???";
 
                 if (properties != null && properties.TryGetValue(name, out Func<string> getter))
