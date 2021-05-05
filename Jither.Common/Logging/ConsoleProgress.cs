@@ -24,13 +24,13 @@ namespace Jither.Logging
         private readonly int positionX;
         private readonly int positionY;
         private readonly bool disabled;
-        private readonly List<ProgressSlot> slots = new List<ProgressSlot>();
+        private readonly List<ProgressSlot> slots = new();
         private IList<object> values;
         private bool disposed;
 
         private static readonly int UPDATE_INTERVAL = 20;
 
-        private static readonly Regex RX_SLOT = new Regex(@"\{(?<index>\d+)\}");
+        private static readonly Regex RX_SLOT = new(@"\{(?<index>\d+)\}");
 
         private readonly Stopwatch stopwatch;
 
@@ -109,6 +109,7 @@ namespace Jither.Logging
                 Update();
                 disposed = true;
             }
+            GC.SuppressFinalize(this);
         }
     }
 }

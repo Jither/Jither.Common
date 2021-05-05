@@ -25,7 +25,7 @@ namespace Jither.Tasks
 			}
 		}
 
-        private readonly MessageQueue<Message> queue = new MessageQueue<Message>();
+        private readonly MessageQueue<Message> queue = new();
 		
 		/// <summary>
 		/// Sends a message and does not wait

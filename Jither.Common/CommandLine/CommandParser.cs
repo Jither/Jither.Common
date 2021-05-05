@@ -10,7 +10,7 @@ namespace Jither.CommandLine
 {
     public class CommandParser
     {
-        private readonly List<Verb> verbs = new List<Verb>();
+        private readonly List<Verb> verbs = new();
         public IReadOnlyList<Verb> Verbs => verbs;
         public Verb Options { get; private set; }
 

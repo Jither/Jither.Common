@@ -13,8 +13,8 @@ namespace Jither.Tasks
 	/// <typeparam name="T"></typeparam>
 	public sealed class MessageQueue<T>
 	{
-		private readonly ConcurrentQueue<T> queue = new ConcurrentQueue<T>();
-        private readonly SemaphoreSlim sync = new SemaphoreSlim(0);
+		private readonly ConcurrentQueue<T> queue = new();
+        private readonly SemaphoreSlim sync = new(0);
 
 		public bool IsEmpty => queue.IsEmpty;
 		

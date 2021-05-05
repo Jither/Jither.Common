@@ -8,7 +8,7 @@ namespace Jither.IO.Types
     {
         private static readonly string VALID_CHARS = "_ 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-        public uint NumericValue { get; }
+        public ushort NumericValue { get; }
         public string Name { get; }
 
         public bool IsValid
