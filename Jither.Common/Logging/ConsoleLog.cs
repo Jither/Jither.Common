@@ -11,13 +11,14 @@ namespace Jither.Logging
         private readonly string format;
 
         private static bool IsColorEnabled => !Console.IsOutputRedirected && Environment.GetEnvironmentVariable("NO_COLOR") == null;
-        private static readonly Dictionary<string, int> VARIABLES = new Dictionary<string, int>
+        private static bool IsColorEnabledForError => !Console.IsErrorRedirected && Environment.GetEnvironmentVariable("NO_COLOR") == null;
+        private static readonly Dictionary<string, int> VARIABLES = new()
         {
             ["name"] = 0,
             ["message"] = 1,
             ["time"] = 2,
         };
-        private static readonly Regex RX_FORMAT_VARIABLE = new Regex(@"\{(?<name>[a-zA-Z0-9]+)(?<mods>[^}]*)\}");
+        private static readonly Regex RX_FORMAT_VARIABLE = new(@"\{(?<name>[a-zA-Z0-9]+)(?<mods>[^}]*)\}");
 
         public ConsoleLog(string format = null)
         {
@@ -39,7 +40,7 @@ namespace Jither.Logging
             });
         }
 
-        private static readonly Regex rxStyle = new Regex(@"<(?<end>/)?(?<style>[a-z]+)(?:#(?<color>[0-9a-f]{6,}))?>");
+        private static readonly Regex rxStyle = new(@"<(?<end>/)?(?<style>[a-z]+)(?:#(?<color>[0-9a-f]{6,}))?>");
 
         private string HexToAnsiRgb(string hex)
         {
@@ -49,31 +50,31 @@ namespace Jither.Logging
 
         private string ConsoleColorToAnsi(ConsoleColor color)
         {
-            switch (color)
+            return color switch
             {
-                case ConsoleColor.Black: return "0";
-                case ConsoleColor.DarkRed : return "1";
-                case ConsoleColor.DarkGreen : return "2";
-                case ConsoleColor.DarkYellow : return "3";
-                case ConsoleColor.DarkBlue : return "4";
-                case ConsoleColor.DarkMagenta : return "5";
-                case ConsoleColor.DarkCyan : return "6";
-                case ConsoleColor.Gray : return "7";
-                case ConsoleColor.DarkGray : return "8";
-                case ConsoleColor.Red : return "9";
-                case ConsoleColor.Green : return "10";
-                case ConsoleColor.Yellow : return "11";
-                case ConsoleColor.Blue : return "12";
-                case ConsoleColor.Magenta : return "13";
-                case ConsoleColor.Cyan : return "14";
-                case ConsoleColor.White : return "15";
-                default: throw new ArgumentException($"Unknown ConsoleColor: {color}");
-            }
+                ConsoleColor.Black => "0",
+                ConsoleColor.DarkRed => "1",
+                ConsoleColor.DarkGreen => "2",
+                ConsoleColor.DarkYellow => "3",
+                ConsoleColor.DarkBlue => "4",
+                ConsoleColor.DarkMagenta => "5",
+                ConsoleColor.DarkCyan => "6",
+                ConsoleColor.Gray => "7",
+                ConsoleColor.DarkGray => "8",
+                ConsoleColor.Red => "9",
+                ConsoleColor.Green => "10",
+                ConsoleColor.Yellow => "11",
+                ConsoleColor.Blue => "12",
+                ConsoleColor.Magenta => "13",
+                ConsoleColor.Cyan => "14",
+                ConsoleColor.White => "15",
+                _ => throw new ArgumentException($"Unknown ConsoleColor: {color}"),
+            };
         }
 
-        private string ApplyStyles(string text, ConsoleColor fallbackColor)
+        private string ApplyStyles(string text, ConsoleColor fallbackColor, bool toError)
         {
-            if (!IsColorEnabled)
+            if ((!toError && !IsColorEnabled) || (toError && !IsColorEnabledForError))
             {
                 // Remove all styles
                 return rxStyle.Replace(text, "");
@@ -127,9 +128,10 @@ namespace Jither.Logging
                     break;
             }
 
-            text = ApplyStyles(text, Console.ForegroundColor);
+            bool toError = (level == LogLevel.Warning) || (level == LogLevel.Error);
+            text = ApplyStyles(text, Console.ForegroundColor, toError);
 
-            if (level == LogLevel.Error || level == LogLevel.Warning)
+            if (toError)
             {
                 Console.Error.WriteLine(text);
             }
