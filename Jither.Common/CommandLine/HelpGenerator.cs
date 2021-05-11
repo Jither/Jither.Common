@@ -206,6 +206,20 @@ namespace Jither.CommandLine
             }
         }
 
+        private string BuildHelp(ArgumentDefinition arg, string help)
+        {
+            help ??= String.Empty;
+
+            if (arg.IsEnum)
+            {
+                // The argument string is either the name - or, for enums, a list of the valid values
+                var validValues = String.Join("|", Enum.GetNames(arg.PropertyType));
+
+                help += $" ({validValues})";
+            }
+            return help;
+        }
+
         // TODO: Templating
         private void WriteArguments(string verbName)
         {
@@ -246,12 +260,14 @@ namespace Jither.CommandLine
                     table.AddColumn(20, ConsoleColumnFormat.AutoSize);
                     foreach (var arg in positional)
                     {
+                        string help = BuildHelp(arg, arg.Help);
+
                         table.AddRow(
                             String.Empty,
                             arg.Position,
                             arg.Name,
                             arg.Required ? "<required>" : String.Empty,
-                            arg.Help ?? String.Empty
+                            help
                         );
                     }
 
@@ -282,15 +298,7 @@ namespace Jither.CommandLine
                             longName += $" <{argName}>";
                         }
 
-                        string help = arg.Help;
-
-                        if (arg.IsEnum)
-                        {
-                            // The argument string is either the name - or, for enums, a list of the valid values
-                            var validValues = String.Join("|", Enum.GetNames(arg.PropertyType));
-
-                            help += $" ({validValues})";
-                        }
+                        string help = BuildHelp(arg, arg.Help);
 
                         if (arg.Default != null)
                         {
