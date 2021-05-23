@@ -7,7 +7,7 @@ namespace Jither.Utilities
 {
     public static class StringExtensions
     {
-        private static readonly Regex RX_TEMPLATE = new Regex(@"\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}");
+        private static readonly Regex RX_TEMPLATE = new(@"\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}");
 
         public static IEnumerable<string> Split(this string str, Func<char, bool> predicate)
         {
@@ -17,19 +17,19 @@ namespace Jither.Utilities
             {
                 if (predicate(str[c]))
                 {
-                    yield return str.Substring(nextPiece, c - nextPiece);
+                    yield return str[nextPiece..c];
                     nextPiece = c + 1;
                 }
             }
 
-            yield return str.Substring(nextPiece);
+            yield return str[nextPiece..];
         }
 
         public static string TrimMatchingQuotes(this string input, char quote)
         {
             if ((input.Length >= 2) &&
-                (input[0] == quote) && (input[input.Length - 1] == quote))
-                return input.Substring(1, input.Length - 2);
+                (input[0] == quote) && (input[^1] == quote))
+                return input[1..^1];
 
             return input;
         }
@@ -65,14 +65,14 @@ namespace Jither.Utilities
                     // Otherwise, break *after* the break opportunity (add 1).
                     nextBreak = nextBreak == -1 ? index + width : nextBreak + 1;
                 }
-                result.Add(str.Substring(index, nextBreak - index));
+                result.Add(str[index..nextBreak]);
 
                 index = nextBreak;
             }
             return result;
         }
 
-        private static readonly Regex RX_WORD_BOUNDARY = new Regex(@"\w\b", RegexOptions.RightToLeft);
+        private static readonly Regex RX_WORD_BOUNDARY = new(@"\w\b", RegexOptions.RightToLeft);
 
         public static string Crop(this string str, int maxLength, string postfix = "", bool cropAtWordEnd = false)
         {
@@ -128,6 +128,33 @@ namespace Jither.Utilities
             });
         }
 
+        public static List<int> GetLineIndices(this string str, bool includeEof = false)
+        {
+            var result = new List<int> { 0 };
+            int length = str.Length;
+            int i = 0;
+            while (i < length)
+            {
+                char c = str[i];
+                if (c == '\r' || c == '\n')
+                {
+                    i++;
+                    if (c == '\r' && i < length && str[i] == '\n')
+                    {
+                        i++;
+                    }
+                    result.Add(i);
+                    continue;
+                }
+                i++;
+            }
 
+            if (includeEof)
+            {
+                result.Add(length);
+            }
+
+            return result;
+        }
     }
 }

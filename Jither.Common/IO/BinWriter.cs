@@ -182,14 +182,14 @@ namespace Jither.IO
         public void WriteStringZ(string value)
         {
             byte[] strBuffer = Encoding.ASCII.GetBytes(value);
-            InternalWrite(strBuffer, (uint)value.Length);
+            InternalWrite(strBuffer, value.Length);
             WriteU8(0);
         }
 
         public void WriteString(string value)
         {
             byte[] strBuffer = Encoding.ASCII.GetBytes(value);
-            InternalWrite(strBuffer, (uint)value.Length);
+            InternalWrite(strBuffer, value.Length);
         }
 
         public void WriteFourCC(FourCC value)
@@ -202,14 +202,14 @@ namespace Jither.IO
             WriteU16LE(value.NumericValue);
         }
 
-        public void Write(uint count, byte[] value)
+        public void Write(int count, byte[] value)
         {
             InternalWrite(value, count);
         }
 
-        protected virtual void InternalWrite(byte[] aBuffer, uint count)
+        protected virtual void InternalWrite(byte[] aBuffer, int count)
         {
-            stream.Write(aBuffer, 0, (int)count);
+            stream.Write(aBuffer, 0, count);
         }
 
         public void Close()

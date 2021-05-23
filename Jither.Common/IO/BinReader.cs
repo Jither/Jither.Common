@@ -180,7 +180,7 @@ namespace Jither.IO
 
         public string ReadStringZ()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             byte b;
             while (true)
             {
@@ -196,6 +196,10 @@ namespace Jither.IO
         public string ReadStringZ(int maxLength)
         {
             byte[] buffer = new byte[maxLength];
+            if (Position + maxLength > Size)
+            {
+                maxLength = (int)(Size - Position);
+            }
             InternalRead(buffer, maxLength);
             int length = Array.IndexOf(buffer, (byte)0);
             if (length < 0)
@@ -227,7 +231,7 @@ namespace Jither.IO
 
         public string ReadXorStringZ(byte xor, bool zeroIsEncrypted = false)
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             // If the null terminator is encrypted, it will be 0 after decryption
             // If it's *not* encrypted, it will be the xor value
             int terminator = zeroIsEncrypted ? 0 : xor;
@@ -280,6 +284,11 @@ namespace Jither.IO
         private int InternalRead(byte[] destinationBuffer, int count, int destinationBufferOffset = 0)
         {
             Debug.Assert(count <= destinationBuffer.Length);
+            if (Position + count > Size)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), $"Attempt to read beyond end of stream ({Position + count - Size} bytes past {Size})");
+            }
+            Debug.Assert(Position + count <= Size);
             return stream.Read(destinationBuffer, destinationBufferOffset, count);
         }
 
@@ -299,6 +308,7 @@ namespace Jither.IO
                 }
                 disposed = true;
             }
+            GC.SuppressFinalize(this);
         }
     }
 }

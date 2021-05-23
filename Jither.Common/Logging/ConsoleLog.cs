@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace Jither.Logging
 {
+    [Obsolete("Please move to StyledConsoleLog")]
     public class ConsoleLog : ILog
     {
         private readonly ConsoleColor defaultColor;

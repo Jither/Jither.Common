@@ -7,8 +7,8 @@ namespace Jither.Linq
 {
     public class CachedEnumerable<T> : IEnumerable<T>
     {
-        private IEnumerator<T> enumerator;
-        private readonly List<T> cache = new List<T>();
+        private readonly IEnumerator<T> enumerator;
+        private readonly List<T> cache = new();
 
         public CachedEnumerable(IEnumerable<T> enumerable) : this(enumerable.GetEnumerator())
         {
