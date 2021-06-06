@@ -263,6 +263,11 @@ namespace Jither.IO
             return InternalRead(result, count);
         }
 
+        public int ReadToEnd(out byte[] result)
+        {
+            return Read((int)(Size - Position), out result);
+        }
+
         public int Read(byte[] buffer, int bufferOffset, int count)
         {
             return InternalRead(buffer, count, bufferOffset);

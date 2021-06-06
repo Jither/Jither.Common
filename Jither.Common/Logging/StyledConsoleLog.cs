@@ -148,7 +148,27 @@ namespace Jither.Logging
             if ((!toError && !IsColorEnabled) || (toError && !IsColorEnabledForError))
             {
                 // Remove all styles
-                return parser.Replace(text, tag => "");
+                int stackIndex = 0;
+                return parser.Replace(text, tag =>
+                {
+                    if (tag.StartsWith("/"))
+                    {
+                        if (stackIndex != 0)
+                        {
+                            stackIndex--;
+                            return "";
+                        }
+                    }
+                    else
+                    {
+                        if (styles.ContainsKey(tag))
+                        {
+                            stackIndex++;
+                            return "";
+                        }
+                    }
+                    return '[' + tag + ']';
+                });
             }
             else
             {

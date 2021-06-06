@@ -17,22 +17,22 @@ namespace Jither.Utilities
         {
             if (source == null)
             {
-                throw new ArgumentNullException("source");
+                throw new ArgumentNullException(nameof(source));
             }
             if (keySelector == null)
             {
-                throw new ArgumentNullException("keySelector");
+                throw new ArgumentNullException(nameof(keySelector));
             }
             if (comparer == null)
             {
-                throw new ArgumentNullException("comparer");
+                throw new ArgumentNullException(nameof(comparer));
             }
             return DistinctImpl(source, keySelector, comparer);
         }
 
         private static IEnumerable<TSource> DistinctImpl<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
         {
-            HashSet<TKey> knownKeys = new HashSet<TKey>(comparer);
+            var knownKeys = new HashSet<TKey>(comparer);
             foreach (TSource element in source)
             {
                 if (knownKeys.Add(keySelector(element)))

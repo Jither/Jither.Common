@@ -8,7 +8,7 @@ namespace Jither.Utilities
 {
     public static class ListExtensions
     {
-        public static void Resize<T>(this List<T> list, int size, T element = default(T))
+        public static void Resize<T>(this List<T> list, int size, T element = default)
         {
             int count = list.Count;
 
