@@ -110,6 +110,12 @@ namespace Jither.CommandLine
         private int WriteHelp(HelpOptions options)
         {
             var generator = new HelpGenerator(this, null, helpSettings);
+            var verb = GetVerbByName(options.VerbName);
+            if (verb == null)
+            {
+                HandleError(null, $"No such verb name: {options.VerbName}");
+                return -1;
+            }
             generator.Write(options.VerbName);
             return 0;
         }
