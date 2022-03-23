@@ -32,6 +32,10 @@ namespace Jither.Logging
             var codes = new List<int>();
             if (color != null)
             {
+                if (color.StartsWith('#'))
+                {
+                    color = color.Substring(1);
+                }
                 if (!Int32.TryParse(color, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int rgb))
                 {
                     throw new FormatException($"Invalid color in style: {color}");
