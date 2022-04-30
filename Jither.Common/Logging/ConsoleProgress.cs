@@ -88,7 +88,8 @@ namespace Jither.Logging
             int currentX = Console.CursorLeft;
             int currentY = Console.CursorTop;
 
-            bool cursorWasVisible = Console.CursorVisible;
+            bool cursorWasVisible = OperatingSystem.IsWindows() ? Console.CursorVisible : true;
+
             Console.CursorVisible = false;
 
             for (int slotIndex = 0; slotIndex < slots.Count; slotIndex++)

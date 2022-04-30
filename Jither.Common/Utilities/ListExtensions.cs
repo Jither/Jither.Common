@@ -26,5 +26,11 @@ namespace Jither.Utilities
                 list.AddRange(Enumerable.Repeat(element, size - count));
             }
         }
+
+        public static string FriendlyJoin<T>(this IEnumerable<T> list, string firstSeparator = ", ", string lastSeparator = " or ")
+        {
+            string initial = String.Join(firstSeparator, list.Take(list.Count() - 1));
+            return $"{initial}{lastSeparator}{list.Last()}";
+        }
     }
 }

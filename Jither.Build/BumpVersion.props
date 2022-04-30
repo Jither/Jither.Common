@@ -1,0 +1,22 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This inline task props file allows us to use the BumpVersion task without requiring the Jither.Build.dll to be built -->
+	<UsingTask
+		TaskName="BumpVersion"
+		TaskFactory="RoslynCodeTaskFactory"
+		AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <VersionFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="True" />
+    </ParameterGroup>
+		<Task>
+      <Code Source="$(MSBuildThisFileDirectory)BumpVersion.cs" Language="cs" />
+		</Task>
+	</UsingTask>
+
+  <!-- Only bump on release builds -->
+  <Target Name="Bump" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <ProjectFile Include="$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+    <BumpVersion VersionFiles="@(ProjectFile)" />
+  </Target>
+</Project>
