@@ -376,16 +376,24 @@ public class HelpGenerator
             else
             {
                 string optionStr = option.ShortestDisplayName;
-                if (!option.IsSwitch)
-                {
-                    // If the option itself is required, don't add "required"-brackets around the argument:
-                    optionStr += option.Required ? $" {option.ArgName}" : $" <{option.ArgName}>";
-                }
                 if (option.IsList)
                 {
+                    // Required with short name: -t <value...>
+                    // Required with long name: --target <value...>
+                    // Optional with short name: [-t <value...>]
+                    // Optional with long name: [--target <value...>]
                     optionStr += "...";
                 }
-                args.Add(option.Required ? $"<{optionStr}>" : $"[{optionStr}]");
+                if (!option.IsSwitch)
+                {
+                    // Required with short name: -t <value>
+                    // Required with long name: --target <value>
+                    // Optional with short name: [-t <value>]
+                    // Optional with long name: [--target <value>]
+                    optionStr += $" <{option.ArgName}>";
+                }
+
+                args.Add(option.Required ? optionStr : $"[{optionStr}]");
             }
         }
 
