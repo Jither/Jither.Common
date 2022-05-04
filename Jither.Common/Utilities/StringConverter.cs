@@ -1,36 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Jither.Utilities
+namespace Jither.Utilities;
+
+public static class StringConverter
 {
-    public static class StringConverter
+    public static string PascalToKebabCase(string str)
     {
-        public static string PascalToKebabCase(string str)
+        string result = "";
+        bool previousWasUpper = false;
+        for (int i = 0; i < str.Length; i++)
         {
-            string result = "";
-            bool previousWasUpper = false;
-            for (int i = 0; i < str.Length; i++)
+            char c = str[i];
+            if (Char.IsUpper(c))
             {
-                char c = str[i];
-                if (Char.IsUpper(c))
+                if (i > 0 && !previousWasUpper)
                 {
-                    if (i > 0 && !previousWasUpper)
-                    {
-                        result += "-";
-                    }
-                    previousWasUpper = true;
-                    c = Char.ToLower(c);
+                    result += "-";
                 }
-                else
-                {
-                    previousWasUpper = false;
-                }
-                result += c;
+                previousWasUpper = true;
+                c = Char.ToLower(c);
             }
-            return result;
+            else
+            {
+                previousWasUpper = false;
+            }
+            result += c;
         }
+        return result;
     }
 }

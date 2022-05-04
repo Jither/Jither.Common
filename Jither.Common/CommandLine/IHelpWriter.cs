@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Jither.CommandLine;
 
-namespace Jither.CommandLine
+public enum HelpSection
 {
-    public enum HelpSection
-    {
-        Header,
-        Error,
-        HelpHeader,
-        Usage,
-        Examples,
-        Verbs,
-        Arguments,
-    }
+    Header,
+    Error,
+    HelpHeader,
+    Usage,
+    Examples,
+    Verbs,
+    Arguments,
+}
 
-    public interface IHelpWriter
-    {
-        void Write(HelpSection section, string text);
-    }
+public interface IHelpWriter
+{
+    void Write(HelpSection section, string text);
 }

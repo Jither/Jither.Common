@@ -1,50 +1,48 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Jither.Linq
+namespace Jither.Linq;
+
+public class CachedEnumerable<T> : IEnumerable<T>
 {
-    public class CachedEnumerable<T> : IEnumerable<T>
+    private readonly IEnumerator<T> enumerator;
+    private readonly List<T> cache = new();
+
+    public CachedEnumerable(IEnumerable<T> enumerable) : this(enumerable.GetEnumerator())
     {
-        private readonly IEnumerator<T> enumerator;
-        private readonly List<T> cache = new();
 
-        public CachedEnumerable(IEnumerable<T> enumerable) : this(enumerable.GetEnumerator())
+    }
+
+    public CachedEnumerable(IEnumerator<T> enumerator)
+    {
+        this.enumerator = enumerator;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        int index = 0;
+
+        while (true)
         {
-
-        }
-
-        public CachedEnumerable(IEnumerator<T> enumerator)
-        {
-            this.enumerator = enumerator;
-        }
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            int index = 0;
-
-            while (true)
+            if (index >= cache.Count)
             {
-                if (index >= cache.Count)
+                if (enumerator.MoveNext())
                 {
-                    if (enumerator.MoveNext())
-                    {
-                        var current = enumerator.Current;
-                        cache.Add(current);
-                    }
-                    else
-                    {
-                        yield break;
-                    }
+                    var current = enumerator.Current;
+                    cache.Add(current);
                 }
-                yield return cache[index++];
+                else
+                {
+                    yield break;
+                }
             }
+            yield return cache[index++];
         }
+    }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

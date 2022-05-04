@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace Jither.Logging
+namespace Jither.Logging;
+
+public interface ILog
 {
-    public interface ILog
-    {
-        void Log(string loggerName, LogLevel level, DateTime time, string message);
-    }
+    void Log(string loggerName, LogLevel level, DateTime time, string message);
 }

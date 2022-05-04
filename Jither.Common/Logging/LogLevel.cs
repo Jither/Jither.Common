@@ -1,12 +1,11 @@
-﻿namespace Jither.Logging
+﻿namespace Jither.Logging;
+
+public enum LogLevel
 {
-    public enum LogLevel
-    {
-        Debug,
-        Verbose,
-        Info,
-        Warning,
-        Error,
-        Quiet
-    }
+    Debug,
+    Verbose,
+    Info,
+    Warning,
+    Error,
+    Quiet
 }

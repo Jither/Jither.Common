@@ -6,18 +6,17 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Jither.Utilities
+namespace Jither.Utilities;
+
+public static class BufferExtensions
 {
-    public static class BufferExtensions
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ReadOnlySpan<byte> ToSpan(in this ReadOnlySequence<byte> buffer)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<byte> ToSpan(in this ReadOnlySequence<byte> buffer)
+        if (buffer.IsSingleSegment)
         {
-            if (buffer.IsSingleSegment)
-            {
-                return buffer.FirstSpan;
-            }
-            return buffer.ToArray();
+            return buffer.FirstSpan;
         }
+        return buffer.ToArray();
     }
 }

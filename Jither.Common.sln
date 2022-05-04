@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31205.134
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jither.Common.Tests", "Jither.Common.Tests\Jither.Common.Tests.csproj", "{8EF19B6A-EB99-4619-B368-579958FA3959}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jither.Common.Tests", "Jither.Common.Tests\Jither.Common.Tests.csproj", "{8EF19B6A-EB99-4619-B368-579958FA3959}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jither.Common", "Jither.Common\Jither.Common.csproj", "{DB759EDE-7370-41F7-BE54-30C2ED6CE103}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandLineSandbox", "CommandLineSandbox\CommandLineSandbox.csproj", "{F47F9955-8CB3-4280-83E8-37632ACE55E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{DB759EDE-7370-41F7-BE54-30C2ED6CE103}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB759EDE-7370-41F7-BE54-30C2ED6CE103}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB759EDE-7370-41F7-BE54-30C2ED6CE103}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F47F9955-8CB3-4280-83E8-37632ACE55E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F47F9955-8CB3-4280-83E8-37632ACE55E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F47F9955-8CB3-4280-83E8-37632ACE55E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F47F9955-8CB3-4280-83E8-37632ACE55E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

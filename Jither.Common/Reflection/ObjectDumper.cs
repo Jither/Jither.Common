@@ -4,187 +4,186 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace Jither.Reflection
+namespace Jither.Reflection;
+
+//http://stackoverflow.com/questions/852181/c-printing-all-properties-of-an-object
+public class ObjectDumper
 {
-    //http://stackoverflow.com/questions/852181/c-printing-all-properties-of-an-object
-    public class ObjectDumper
+    private int _currentIndent;
+    private readonly int _indentSize;
+    private readonly StringBuilder _stringBuilder;
+    private readonly Dictionary<object, int> _hashListOfFoundElements;
+    private readonly char _indentChar;
+    private readonly int _depth;
+    private int _currentLine;
+
+    private ObjectDumper(int depth, int indentSize, char indentChar)
     {
-        private int _currentIndent;
-        private readonly int _indentSize;
-        private readonly StringBuilder _stringBuilder;
-        private readonly Dictionary<object, int> _hashListOfFoundElements;
-        private readonly char _indentChar;
-        private readonly int _depth;
-        private int _currentLine;
+        _depth = depth;
+        _indentSize = indentSize;
+        _indentChar = indentChar;
+        _stringBuilder = new StringBuilder();
+        _hashListOfFoundElements = new Dictionary<object, int>();
+    }
 
-        private ObjectDumper(int depth, int indentSize, char indentChar)
+    public static string Dump(object element, int depth = 4, int indentSize = 2, char indentChar = ' ')
+    {
+        var instance = new ObjectDumper(depth, indentSize, indentChar);
+        return instance.DumpElement(element, true);
+    }
+
+    private string DumpElement(object element, bool isTopOfTree = false)
+    {
+        if (_currentIndent > _depth) { return null; }
+        if (element == null || element is string)
         {
-            _depth = depth;
-            _indentSize = indentSize;
-            _indentChar = indentChar;
-            _stringBuilder = new StringBuilder();
-            _hashListOfFoundElements = new Dictionary<object, int>();
+            Write(FormatValue(element));
         }
-
-        public static string Dump(object element, int depth = 4, int indentSize = 2, char indentChar = ' ')
+        else if (element is ValueType)
         {
-            var instance = new ObjectDumper(depth, indentSize, indentChar);
-            return instance.DumpElement(element, true);
-        }
-
-        private string DumpElement(object element, bool isTopOfTree = false)
-        {
-            if (_currentIndent > _depth) { return null; }
-            if (element == null || element is string)
+            Type objectType = element.GetType();
+            bool isWritten = false;
+            if (objectType.IsGenericType)
+            {
+                Type baseType = objectType.GetGenericTypeDefinition();
+                if (baseType == typeof(KeyValuePair<,>))
+                {
+                    isWritten = true;
+                    Write("Key:");
+                    _currentIndent++;
+                    DumpElement(objectType.GetProperty("Key").GetValue(element, null));
+                    _currentIndent--;
+                    Write("Value:");
+                    _currentIndent++;
+                    DumpElement(objectType.GetProperty("Value").GetValue(element, null));
+                    _currentIndent--;
+                }
+            }
+            if (!isWritten)
             {
                 Write(FormatValue(element));
             }
-            else if (element is ValueType)
+        }
+        else
+        {
+            if (element is IEnumerable enumerableElement)
             {
-                Type objectType = element.GetType();
-                bool isWritten = false;
-                if (objectType.IsGenericType)
+                foreach (object item in enumerableElement)
                 {
-                    Type baseType = objectType.GetGenericTypeDefinition();
-                    if (baseType == typeof(KeyValuePair<,>))
+                    if (item is IEnumerable && item is not string)
                     {
-                        isWritten = true;
-                        Write("Key:");
                         _currentIndent++;
-                        DumpElement(objectType.GetProperty("Key").GetValue(element, null));
-                        _currentIndent--;
-                        Write("Value:");
-                        _currentIndent++;
-                        DumpElement(objectType.GetProperty("Value").GetValue(element, null));
+                        DumpElement(item);
                         _currentIndent--;
                     }
-                }
-                if (!isWritten)
-                {
-                    Write(FormatValue(element));
+                    else
+                    {
+                        DumpElement(item);
+                    }
                 }
             }
             else
             {
-                if (element is IEnumerable enumerableElement)
+                Type objectType = element.GetType();
+                Write("{{{0}(HashCode:{1})}}", objectType.FullName, element.GetHashCode());
+                if (!AlreadyDumped(element))
                 {
-                    foreach (object item in enumerableElement)
+                    _currentIndent++;
+                    MemberInfo[] members = objectType.GetMembers(BindingFlags.Public | BindingFlags.Instance);
+                    foreach (var memberInfo in members)
                     {
-                        if (item is IEnumerable && !(item is string))
+                        var fieldInfo = memberInfo as FieldInfo;
+                        var propertyInfo = memberInfo as PropertyInfo;
+
+                        if (fieldInfo == null && (propertyInfo == null || !propertyInfo.CanRead || propertyInfo.GetIndexParameters().Length > 0))
+                            continue;
+
+                        var type = fieldInfo != null ? fieldInfo.FieldType : propertyInfo.PropertyType;
+                        object value;
+                        try
                         {
-                            _currentIndent++;
-                            DumpElement(item);
-                            _currentIndent--;
+                            value = fieldInfo != null
+                                               ? fieldInfo.GetValue(element)
+                                               : propertyInfo.GetValue(element, null);
+                        }
+                        catch (Exception e)
+                        {
+                            Write("{0} failed with:{1}", memberInfo.Name, (e.GetBaseException() ?? e).Message);
+                            continue;
+                        }
+
+                        if (type.IsValueType || type == typeof(string))
+                        {
+                            Write("{0}: {1}", memberInfo.Name, FormatValue(value));
                         }
                         else
                         {
-                            DumpElement(item);
+                            var isEnumerable = typeof(IEnumerable).IsAssignableFrom(type);
+                            Write("{0}: {1}", memberInfo.Name, isEnumerable ? "..." : "{ }");
+
+                            _currentIndent++;
+                            DumpElement(value);
+                            _currentIndent--;
                         }
                     }
+                    _currentIndent--;
+                }
+            }
+        }
+
+        return isTopOfTree ? _stringBuilder.ToString() : null;
+    }
+
+    private bool AlreadyDumped(object value)
+    {
+        if (value == null)
+            return false;
+        if (_hashListOfFoundElements.TryGetValue(value, out int lineNo))
+        {
+            Write("(reference already dumped - line:{0})", lineNo);
+            return true;
+        }
+        _hashListOfFoundElements.Add(value, _currentLine);
+        return false;
+    }
+
+    private void Write(string value, params object[] args)
+    {
+        var space = new string(_indentChar, _currentIndent * _indentSize);
+
+        if (args != null)
+            value = string.Format(value, args);
+
+        _stringBuilder.AppendLine(space + value);
+        _currentLine++;
+    }
+
+    private string FormatValue(object o)
+    {
+        switch (o)
+        {
+            case null:
+                return "null";
+            case DateTime time:
+                return time.ToShortDateString();
+            case string _:
+                return "\"" + (string)o + "\"";
+            case char _:
+                if (o.Equals('\0'))
+                {
+                    return "''";
                 }
                 else
                 {
-                    Type objectType = element.GetType();
-                    Write("{{{0}(HashCode:{1})}}", objectType.FullName, element.GetHashCode());
-                    if (!AlreadyDumped(element))
-                    {
-                        _currentIndent++;
-                        MemberInfo[] members = objectType.GetMembers(BindingFlags.Public | BindingFlags.Instance);
-                        foreach (var memberInfo in members)
-                        {
-                            var fieldInfo = memberInfo as FieldInfo;
-                            var propertyInfo = memberInfo as PropertyInfo;
-
-                            if (fieldInfo == null && (propertyInfo == null || !propertyInfo.CanRead || propertyInfo.GetIndexParameters().Length > 0))
-                                continue;
-
-                            var type = fieldInfo != null ? fieldInfo.FieldType : propertyInfo.PropertyType;
-                            object value;
-                            try
-                            {
-                                value = fieldInfo != null
-                                                   ? fieldInfo.GetValue(element)
-                                                   : propertyInfo.GetValue(element, null);
-                            }
-                            catch (Exception e)
-                            {
-                                Write("{0} failed with:{1}", memberInfo.Name, (e.GetBaseException() ?? e).Message);
-                                continue;
-                            }
-
-                            if (type.IsValueType || type == typeof(string))
-                            {
-                                Write("{0}: {1}", memberInfo.Name, FormatValue(value));
-                            }
-                            else
-                            {
-                                var isEnumerable = typeof(IEnumerable).IsAssignableFrom(type);
-                                Write("{0}: {1}", memberInfo.Name, isEnumerable ? "..." : "{ }");
-
-                                _currentIndent++;
-                                DumpElement(value);
-                                _currentIndent--;
-                            }
-                        }
-                        _currentIndent--;
-                    }
+                    return "'" + (char)o + "'";
                 }
-            }
 
-            return isTopOfTree ? _stringBuilder.ToString() : null;
-        }
-
-        private bool AlreadyDumped(object value)
-        {
-            if (value == null)
-                return false;
-            if (_hashListOfFoundElements.TryGetValue(value, out int lineNo))
-            {
-                Write("(reference already dumped - line:{0})", lineNo);
-                return true;
-            }
-            _hashListOfFoundElements.Add(value, _currentLine);
-            return false;
-        }
-
-        private void Write(string value, params object[] args)
-        {
-            var space = new string(_indentChar, _currentIndent * _indentSize);
-
-            if (args != null)
-                value = string.Format(value, args);
-
-            _stringBuilder.AppendLine(space + value);
-            _currentLine++;
-        }
-
-        private string FormatValue(object o)
-        {
-            switch (o)
-            {
-                case null:
-                    return "null";
-                case DateTime time:
-                    return time.ToShortDateString();
-                case string _:
-                    return "\"" + (string)o + "\"";
-                case char _:
-                    if (o.Equals('\0'))
-                    {
-                        return "''";
-                    }
-                    else
-                    {
-                        return "'" + (char)o + "'";
-                    }
-
-                case ValueType _:
-                    return o.ToString();
-                case IEnumerable _:
-                    return "...";
-                default:
-                    return "{ }";
-            }
+            case ValueType _:
+                return o.ToString();
+            case IEnumerable _:
+                return "...";
+            default:
+                return "{ }";
         }
     }
 }

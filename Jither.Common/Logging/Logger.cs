@@ -1,63 +1,62 @@
 ﻿using System;
 using System.Text;
 
-namespace Jither.Logging
+namespace Jither.Logging;
+
+public class Logger
 {
-    public class Logger
+    public string Name { get; }
+
+    internal Logger(string name)
     {
-        public string Name { get; }
+        this.Name = name;
+    }
 
-        internal Logger(string name)
+    public void Debug(string message)
+    {
+        if (LogProvider.Level <= LogLevel.Debug)
         {
-            this.Name = name;
+            LogProvider.Log(this, LogLevel.Debug, message);
         }
+    }
 
-        public void Debug(string message)
+    public void Verbose(string message)
+    {
+        if (LogProvider.Level <= LogLevel.Verbose)
         {
-            if (LogProvider.Level <= LogLevel.Debug)
-            {
-                LogProvider.Log(this, LogLevel.Debug, message);
-            }
+            LogProvider.Log(this, LogLevel.Verbose, message);
         }
+    }
 
-        public void Verbose(string message)
+    public void Info(string message)
+    {
+        if (LogProvider.Level <= LogLevel.Info)
         {
-            if (LogProvider.Level <= LogLevel.Verbose)
-            {
-                LogProvider.Log(this, LogLevel.Verbose, message);
-            }
+            LogProvider.Log(this, LogLevel.Info, message);
         }
+    }
 
-        public void Info(string message)
+    public void Warning(string message)
+    {
+        if (LogProvider.Level <= LogLevel.Warning)
         {
-            if (LogProvider.Level <= LogLevel.Info)
-            {
-                LogProvider.Log(this, LogLevel.Info, message);
-            }
+            LogProvider.Log(this, LogLevel.Warning, message);
         }
+    }
 
-        public void Warning(string message)
+    public void Error(string message)
+    {
+        if (LogProvider.Level <= LogLevel.Error)
         {
-            if (LogProvider.Level <= LogLevel.Warning)
-            {
-                LogProvider.Log(this, LogLevel.Warning, message);
-            }
+            LogProvider.Log(this, LogLevel.Error, message);
         }
+    }
 
-        public void Error(string message)
+    public void DebugWarning(string message)
+    {
+        if (LogProvider.Level <= LogLevel.Debug)
         {
-            if (LogProvider.Level <= LogLevel.Error)
-            {
-                LogProvider.Log(this, LogLevel.Error, message);
-            }
-        }
-
-        public void DebugWarning(string message)
-        {
-            if (LogProvider.Level <= LogLevel.Debug)
-            {
-                LogProvider.Log(this, LogLevel.Warning, message);
-            }
+            LogProvider.Log(this, LogLevel.Warning, message);
         }
     }
 }

@@ -2,136 +2,132 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace Jither.CommandLine
+namespace Jither.CommandLine;
+
+public class ArgumentsFormatter
 {
-    public class ArgumentsFormatter
+    private readonly ArgumentDefinitions defs;
+
+    public ArgumentsFormatter(Verb verb)
     {
-        private readonly Verb verb;
-        private readonly ArgumentDefinitions defs;
+        this.defs = verb.GetArgumentDefinitions();
+    }
 
-        public ArgumentsFormatter(Verb verb)
+    // Generates verb argument string based on the provided options object
+    // Rules are:
+    // - Order is: positionals, options, switches
+    // - Switches are stacked when possible
+    public string Format<TOptions>(TOptions options) where TOptions: class, new()
+    {
+        var args = FormatPositionals(options);
+        args = args.Concat(FormatOptions(options));
+
+        return String.Join(" ", args);
+    }
+
+    private IEnumerable<string> FormatPositionals<TOptions>(TOptions options) where TOptions : class, new()
+    {
+        foreach (var positional in defs.Positionals)
         {
-            this.verb = verb;
-            this.defs = verb.GetArgumentDefinitions();
-        }
+            var value = positional.GetValue(options);
 
-        // Generates verb argument string based on the provided options object
-        // Rules are:
-        // - Order is: positionals, options, switches
-        // - Switches are stacked when possible
-        public string Format<TOptions>(TOptions options) where TOptions: class, new()
-        {
-            var args = FormatPositionals(options);
-            args = args.Concat(FormatOptions(options));
-
-            return String.Join(" ", args);
-        }
-
-        private IEnumerable<string> FormatPositionals<TOptions>(TOptions options) where TOptions : class, new()
-        {
-            foreach (var positional in defs.Positionals)
+            if (IsDefault(positional, value))
             {
-                var value = positional.GetValue(options);
-
-                if (IsDefault(positional, value))
-                {
-                    continue;
-                }
-
-                value = ProtectSpaces(value);
-
-                yield return value.ToString();
+                continue;
             }
+
+            value = ProtectSpaces(value);
+
+            yield return value.ToString();
         }
+    }
 
-        private IEnumerable<string> FormatOptions<TOptions>(TOptions options) where TOptions : class, new()
+    private IEnumerable<string> FormatOptions<TOptions>(TOptions options) where TOptions : class, new()
+    {
+        string stackedSwitches = "";
+        foreach (var option in defs.Options)
         {
-            string stackedSwitches = "";
-            foreach (var option in defs.Options)
+            var value = option.GetValue(options);
+
+            if (IsDefault(option, value))
             {
-                var value = option.GetValue(options);
+                continue;
+            }
 
-                if (IsDefault(option, value))
+            if (option.IsSwitch)
+            {
+                if (option.ShortNameCharacter != null)
                 {
-                    continue;
-                }
-
-                if (option.IsSwitch)
-                {
-                    if (option.ShortNameCharacter != null)
-                    {
-                        stackedSwitches += option.ShortNameCharacter;
-                    }
-                    else
-                    {
-                        yield return $"{option.ShortestDisplayName}";
-                    }
-                }
-                else if (option.IsList)
-                {
-                    var list = value as IEnumerable;
-                    foreach (var item in list)
-                    {
-                        var protectedItem = ProtectSpaces(item);
-                        yield return $"{option.ShortestDisplayName} {protectedItem}";
-                    }
+                    stackedSwitches += option.ShortNameCharacter;
                 }
                 else
                 {
-                    value = ProtectSpaces(value);
-
-                    yield return $"{option.ShortestDisplayName} {value}";
+                    yield return $"{option.ShortestDisplayName}";
                 }
             }
-            // Place stacked switches last
-            if (stackedSwitches != String.Empty)
+            else if (option.IsList)
             {
-                yield return "-" + stackedSwitches;
-            }
-        }
-
-        private static readonly char[] WHITESPACE = new[] { ' ', '\t' };
-
-        private object ProtectSpaces(object value)
-        {
-            if (value is string strValue)
-            {
-                if (strValue.IndexOfAny(WHITESPACE) >= 0)
+                var list = value as IEnumerable;
+                foreach (var item in list)
                 {
-                    return "\"" + strValue + "\"";
+                    var protectedItem = ProtectSpaces(item);
+                    yield return $"{option.ShortestDisplayName} {protectedItem}";
                 }
             }
-            return value;
-        }
-
-        private bool IsDefault(Type type, object value)
-        {
-            if (type.IsValueType)
+            else
             {
-                // Note, don't rely on == for boxed value types!
-                return Activator.CreateInstance(type).Equals(value);
+                value = ProtectSpaces(value);
+
+                yield return $"{option.ShortestDisplayName} {value}";
             }
-            return value == null;
         }
-
-        private bool IsDefault(PositionalDefinition positional, object value)
+        // Place stacked switches last
+        if (stackedSwitches != String.Empty)
         {
-            // Check if value is default for the type.
-            return IsDefault(positional.PropertyType, value);
+            yield return "-" + stackedSwitches;
         }
+    }
 
-        private bool IsDefault(OptionDefinition option, object value)
+    private static readonly char[] WHITESPACE = new[] { ' ', '\t' };
+
+    private object ProtectSpaces(object value)
+    {
+        if (value is string strValue)
         {
-            if (option.Default != null)
+            if (strValue.IndexOfAny(WHITESPACE) >= 0)
             {
-                if (option.Default.Equals(value))
-                {
-                    return true;
-                }
+                return "\"" + strValue + "\"";
             }
-            return IsDefault(option.PropertyType, value);
         }
+        return value;
+    }
+
+    private bool IsDefault(Type type, object value)
+    {
+        if (type.IsValueType)
+        {
+            // Note, don't rely on == for boxed value types!
+            return Activator.CreateInstance(type).Equals(value);
+        }
+        return value == null;
+    }
+
+    private bool IsDefault(PositionalDefinition positional, object value)
+    {
+        // Check if value is default for the type.
+        return IsDefault(positional.PropertyType, value);
+    }
+
+    private bool IsDefault(OptionDefinition option, object value)
+    {
+        if (option.Default != null)
+        {
+            if (option.Default.Equals(value))
+            {
+                return true;
+            }
+        }
+        return IsDefault(option.PropertyType, value);
     }
 }

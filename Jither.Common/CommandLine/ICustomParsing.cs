@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Jither.CommandLine;
 
-namespace Jither.CommandLine
+public interface ICustomParsing
 {
-    public interface ICustomParsing
-    {
-        void AfterParse();
-    }
+    void AfterParse();
 }

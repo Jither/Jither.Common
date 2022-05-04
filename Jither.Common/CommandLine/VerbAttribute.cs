@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Jither.CommandLine
+namespace Jither.CommandLine;
+
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+public class VerbAttribute : Attribute
 {
-    public class VerbAttribute : Attribute
-    {
-        public string Name { get; }
-        public string Help { get; set; }
+    public string Name { get; }
+    public string Help { get; set; }
 
-        public VerbAttribute(string name)
-        {
-            this.Name = name;
-        }
+    public VerbAttribute(string name)
+    {
+        this.Name = name;
     }
 }
