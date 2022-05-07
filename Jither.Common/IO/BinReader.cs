@@ -1,5 +1,6 @@
 ﻿using Jither.IO.Types;
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -10,7 +11,7 @@ public class BinReader : IDisposable
 {
     private bool disposed;
 
-    protected Stream stream;
+    protected internal Stream stream;
     private readonly bool ownStream;
     private readonly byte[] buffer = new byte[32];
     private readonly byte[] endianConversionBuffer = new byte[32];
@@ -194,38 +195,52 @@ public class BinReader : IDisposable
 
     public string ReadStringZ(int maxLength)
     {
-        byte[] buffer = new byte[maxLength];
-        if (Position + maxLength > Size)
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(maxLength);
+        try
         {
-            maxLength = (int)(Size - Position);
+            if (Position + maxLength > Size)
+            {
+                maxLength = (int)(Size - Position);
+            }
+            InternalRead(buffer, maxLength);
+            int length = Array.IndexOf(buffer, (byte)0);
+            if (length < 0)
+            {
+                length = maxLength;
+            }
+            return Encoding.ASCII.GetString(buffer, 0, length);
         }
-        InternalRead(buffer, maxLength);
-        int length = Array.IndexOf(buffer, (byte)0);
-        if (length < 0)
+        finally
         {
-            length = maxLength;
+            ArrayPool<byte>.Shared.Return(buffer);
         }
-        return Encoding.ASCII.GetString(buffer, 0, length);
     }
 
     public string ReadXorString(int length, byte xor = 0)
     {
-        byte[] buffer = new byte[length];
-        InternalRead(buffer, length);
-        if (xor != 0)
+        byte[] buffer = ArrayPool<byte>.Shared.Rent(length);
+        try
         {
-            for (int i = 0; i < length; i++)
+            InternalRead(buffer, length);
+            if (xor != 0)
             {
-                buffer[i] ^= xor;
+                for (int i = 0; i < length; i++)
+                {
+                    buffer[i] ^= xor;
+                }
             }
+            // Don't ignore zero termination
+            var actualLength = Array.IndexOf(buffer, (byte)0);
+            if (actualLength >= 0)
+            {
+                length = actualLength;
+            }
+            return Encoding.ASCII.GetString(buffer, 0, length);
         }
-        // Don't ignore zero termination
-        var actualLength = Array.IndexOf(buffer, (byte)0);
-        if (actualLength >= 0)
+        finally
         {
-            length = actualLength;
+            ArrayPool<byte>.Shared.Return(buffer);
         }
-        return Encoding.ASCII.GetString(buffer, 0, length);
     }
 
     public string ReadXorStringZ(byte xor, bool zeroIsEncrypted = false)
@@ -294,6 +309,43 @@ public class BinReader : IDisposable
         }
         Debug.Assert(Position + count <= Size);
         return stream.Read(destinationBuffer, destinationBufferOffset, count);
+    }
+
+    public void CopyTo(BinWriter writer, int length = 0)
+    {
+        if (length > 0)
+        {
+            CopyTo(writer.stream, length);
+        }
+        else
+        {
+            CopyTo(writer.stream);
+        }
+    }
+
+    public void CopyTo(Stream destination, int length = 0)
+    {
+        if (length == 0)
+        {
+            stream.CopyTo(destination);
+            return;
+        }
+
+        const int bufferSize = 4096;
+        var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+        try
+        {
+            while (length > 0)
+            {
+                int bytesRead = stream.Read(buffer, 0, Math.Min(length, bufferSize));
+                destination.Write(buffer, 0, bytesRead);
+                length -= bytesRead;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     public void Close()

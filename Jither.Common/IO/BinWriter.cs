@@ -8,7 +8,8 @@ namespace Jither.IO;
 public class BinWriter : IDisposable
 {
     private bool disposed;
-    protected readonly Stream stream;
+    protected internal Stream stream;
+    private readonly bool ownStream;
 
     // Constant buffer for write operations:
     protected readonly byte[] buffer = new byte[32];
@@ -38,9 +39,10 @@ public class BinWriter : IDisposable
         }
     }
 
-    public BinWriter(Stream stream)
+    public BinWriter(Stream stream, bool ownStream = false)
     {
         this.stream = stream;
+        this.ownStream = ownStream;
     }
 
     public BinWriter(string path)
@@ -234,7 +236,11 @@ public class BinWriter : IDisposable
         if (disposed) return;
         if (disposing)
         {
-            stream.Close();
+            if (ownStream)
+            {
+                stream.Close();
+                stream = null;
+            }
             disposed = true;
         }
     }
