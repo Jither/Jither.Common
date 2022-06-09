@@ -46,7 +46,7 @@ public class BinWriter : IDisposable
     }
 
     public BinWriter(string path)
-        : this(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None))
+        : this(new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None), ownStream: true)
     {
         this.Name = Path.GetFileName(path);
     }
@@ -140,7 +140,7 @@ public class BinWriter : IDisposable
         InternalWrite(buffer, 2);
     }
 
-    public void ReadS32BE(int value)
+    public void WriteS32BE(int value)
     {
         buffer[0] = (byte)(value >> 24);
         buffer[1] = (byte)(value >> 16);
@@ -184,14 +184,14 @@ public class BinWriter : IDisposable
     public void WriteStringZ(string value)
     {
         byte[] strBuffer = Encoding.ASCII.GetBytes(value);
-        InternalWrite(strBuffer, value.Length);
+        InternalWrite(strBuffer);
         WriteU8(0);
     }
 
     public void WriteString(string value)
     {
         byte[] strBuffer = Encoding.ASCII.GetBytes(value);
-        InternalWrite(strBuffer, value.Length);
+        InternalWrite(strBuffer);
     }
 
     public void WriteFourCC(FourCC value)
@@ -210,14 +210,25 @@ public class BinWriter : IDisposable
         InternalWrite(value, count);
     }
 
+    public void Write(ReadOnlySpan<byte> value)
+    {
+        InternalWrite(value);
+    }
+
+
     public void Write(byte[] value, int count)
     {
         InternalWrite(value, count);
     }
 
-    protected virtual void InternalWrite(byte[] aBuffer, int count)
+    protected void InternalWrite(byte[] value, int count)
     {
-        stream.Write(aBuffer, 0, count);
+        InternalWrite(value.AsSpan(0, count));
+    }
+
+    protected virtual void InternalWrite(ReadOnlySpan<byte> aBuffer)
+    {
+        stream.Write(aBuffer);
     }
 
     public void Close()

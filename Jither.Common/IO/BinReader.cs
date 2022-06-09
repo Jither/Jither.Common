@@ -33,6 +33,11 @@ public class BinReader : IDisposable
         this.ownStream = ownStream;
     }
 
+    public BinReader(string path) : this(File.OpenRead(path), ownStream: true)
+    {
+
+    }
+
     public byte ReadU8()
     {
         InternalRead(1);
