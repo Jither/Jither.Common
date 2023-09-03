@@ -343,6 +343,10 @@ public class BinReader : IDisposable
             while (length > 0)
             {
                 int bytesRead = stream.Read(buffer, 0, Math.Min(length, bufferSize));
+                if (bytesRead == 0)
+                {
+                    break;
+                }
                 destination.Write(buffer, 0, bytesRead);
                 length -= bytesRead;
             }
