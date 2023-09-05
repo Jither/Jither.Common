@@ -209,7 +209,7 @@ public class BinReader : IDisposable
             }
             InternalRead(buffer, maxLength);
             int length = Array.IndexOf(buffer, (byte)0);
-            if (length < 0)
+            if (length < 0 || length > maxLength)
             {
                 length = maxLength;
             }
