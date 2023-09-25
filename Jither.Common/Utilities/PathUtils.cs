@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace Jither.Utilities;
 
+[Obsolete("Please use static methods on PathHelpers instead.")]
 public static class PathUtils
 {
     public static string AddExtensionIfMissing(string path, string extension)
