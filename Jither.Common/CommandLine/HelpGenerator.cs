@@ -49,6 +49,7 @@ public class HelpGenerator
             ["product"] = () => entryAssembly.GetCustomAttribute<AssemblyProductAttribute>()?.Product,
             ["version"] = () => entryAssembly.GetInformationalVersion(),
             ["copyright"] = () => entryAssembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright,
+            ["description"] = () => entryAssembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description,
             ["program"] = () => Path.GetFileName(entryAssembly.Location),
             ["program-no-extension"] = () => Path.GetFileNameWithoutExtension(entryAssembly.Location),
 
