@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace Jither.Logging;
 
+public interface ILogWithLifetime
+{
+    void Start();
+    void End();
+}
+
 public static class LogProvider
 {
     private static readonly List<ILog> logs = new();
@@ -25,6 +31,21 @@ public static class LogProvider
     public static void RegisterLog(ILog log)
     {
         logs.Add(log);
+        if (log is ILogWithLifetime lifetimeLog)
+        {
+            lifetimeLog.Start();
+        }
+    }
+
+    public static void CloseLog()
+    {
+        foreach (var log in logs)
+        {
+            if (log is ILogWithLifetime lifetimeLog)
+            {
+                lifetimeLog.End();
+            }
+        }
     }
 
     internal static void Log(Logger logger, LogLevel level, string message)

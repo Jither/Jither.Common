@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 
 namespace Jither.Logging;
@@ -21,10 +23,50 @@ public class ConsoleStyle
     public const string EndOfColor = "EC";
     public string AnsiStart { get; }
     public string AnsiEnd { get; }
+    public string HtmlStart { get; }
+    public string HtmlEnd { get; } = "</span>";
     public ConsoleStyle(string color, ConsoleStyleFlags flags)
     {
+        HtmlStart = MakeHtmlStart(color, flags);
         AnsiStart = MakeAnsiStart(color, flags);
         AnsiEnd = MakeAnsiEnd(color, flags);
+    }
+
+    private string MakeHtmlStart(string color, ConsoleStyleFlags flags)
+    {
+        var styles = new Dictionary<string, string>();
+        if (color != null)
+        {
+            if (color.StartsWith('#'))
+            {
+                color = color[1..];
+            }
+            if (!Int32.TryParse(color, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int rgb))
+            {
+                throw new FormatException($"Invalid color in style: {color}");
+            }
+            styles["color"] = $"#{color:x6}";
+        }
+        if (flags.HasFlag(ConsoleStyleFlags.Bold))
+        {
+            styles["font-weight"] = "bold";
+        }
+        // No support for "dim" yet.
+        if (flags.HasFlag(ConsoleStyleFlags.Italic))
+        {
+            styles["font-style"] = "italic";
+        }
+        if (flags.HasFlag(ConsoleStyleFlags.Underline))
+        {
+            styles["text-decoration"] = "underline";
+        }
+        if (flags.HasFlag(ConsoleStyleFlags.Strike))
+        {
+            styles["text-decoration"] = "line-through";
+        }
+
+        var strStyles = String.Join(';', styles.Select(s => $"{s.Key}: {s.Value}"));
+        return $"<span style=\"{strStyles}\">";
     }
 
     private string MakeAnsiStart(string color, ConsoleStyleFlags flags)
