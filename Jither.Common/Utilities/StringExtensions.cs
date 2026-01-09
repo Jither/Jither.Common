@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace Jither.Utilities;
 
 public static class StringExtensions
 {
-    private static readonly Regex RX_TEMPLATE = new(@"\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}");
+    private static readonly Regex RX_TEMPLATE = new(@"\{\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}\}");
+    private static readonly Regex RX_TEMPLATE_DOUBLE_BRACES = new(@"\{\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}\}");
 
     public static IEnumerable<string> Split(this string str, Func<char, bool> predicate)
     {
@@ -99,12 +103,13 @@ public static class StringExtensions
         return str[..length] + postfix;
     }
 
-    public static string FormatTemplate(this string template, Dictionary<string, string> properties = null)
+    public static string FormatTemplate(this string template, Dictionary<string, string> properties = null, bool doubleBraces = false)
     {
+        var rxTemplate = doubleBraces ? RX_TEMPLATE_DOUBLE_BRACES : RX_TEMPLATE;
         return RX_TEMPLATE.Replace(template, match =>
         {
             // Name may include whitespace at beginning or end. This allows us to include this whitespace only if the property exists
-            string fullName = match.Groups["name"].Value.ToLower();
+            string fullName = match.Groups["name"].Value;
             string name = fullName.Trim();
             _ = Int32.TryParse(match.Groups["pad"].Value, out int pad);
             string value = "???";
