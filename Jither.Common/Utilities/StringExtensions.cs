@@ -132,6 +132,14 @@ public static class StringExtensions
         });
     }
 
+    public static string FormatTemplate(this string template, object injectionObject, bool doubleBraces = false)
+    {
+        var type = injectionObject.GetType();
+        var props = type.GetTypeInfo().GetProperties();
+        var dictionary = props.ToDictionary(x => x.Name, x => x.GetValue(injectionObject, null)?.ToString());
+        return template.FormatTemplate(dictionary, doubleBraces);
+    }
+
     public static List<int> GetLineIndices(this string str, bool includeEof = false)
     {
         var result = new List<int> { 0 };

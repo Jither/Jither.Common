@@ -10,8 +10,6 @@ public class StyledHtmlLog : ILog, ILogWithLifetime
 {
     private readonly string format;
 
-    private bool disposed;
-
     private static readonly Dictionary<string, int> VARIABLES = new()
     {
         ["name"] = 0,
@@ -143,6 +141,5 @@ body {
         Console.WriteLine("</code></pre>");
         Console.WriteLine(@"</body>
 </html>");
-        disposed = true;
     }
 }
