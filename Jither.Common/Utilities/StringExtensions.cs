@@ -9,7 +9,7 @@ namespace Jither.Utilities;
 
 public static class StringExtensions
 {
-    private static readonly Regex RX_TEMPLATE = new(@"\{\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}\}");
+    private static readonly Regex RX_TEMPLATE =               new(@"\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}");
     private static readonly Regex RX_TEMPLATE_DOUBLE_BRACES = new(@"\{\{(?<name>\s*[a-zA-Z0-9-]+\s*)(?:,(?<pad>-?\d+))?\}\}");
 
     public static IEnumerable<string> Split(this string str, Func<char, bool> predicate)
@@ -106,7 +106,7 @@ public static class StringExtensions
     public static string FormatTemplate(this string template, Dictionary<string, string> properties = null, bool doubleBraces = false)
     {
         var rxTemplate = doubleBraces ? RX_TEMPLATE_DOUBLE_BRACES : RX_TEMPLATE;
-        return RX_TEMPLATE.Replace(template, match =>
+        return rxTemplate.Replace(template, match =>
         {
             // Name may include whitespace at beginning or end. This allows us to include this whitespace only if the property exists
             string fullName = match.Groups["name"].Value;
